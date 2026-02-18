@@ -1,190 +1,250 @@
-# 💰 BETTER PRICE — Price Comparison & Tracking Engine
+# PricePulse Assessment
 
-<img width="2752" height="1501" alt="Better Price App Screenshot" src="https://github.com/user-attachments/assets/a844e7af-7bcf-48fa-93cf-dc2f685d90ce" />
+PricePulse is a small, production-style price comparison product built for this assessment using Flask (API), React (UI), and SQLite (relational database).
 
-**BETTER PRICE** is a high-velocity price comparison and tracking engine that lets users instantly compare prices across major marketplaces like **Amazon** and **Flipkart**. Built with a resilient, modular architecture — small, well-structured, and correct as it evolves.
+This submission is created specifically for this assessment and does not include confidential, proprietary, or employer-owned code, data, or prompts.
 
----
+## Repository Structure
 
-## 🛠️ Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Backend** | Python + Flask (Application Factory Pattern) |
-| **Frontend** | React (Vite) + TailwindCSS |
-| **Database** | SQLite via SQLAlchemy ORM |
-| **Validation** | Pydantic v2 (Interface Safety) |
-| **Testing** | Pytest — 11/11 tests passing ✅ |
-
----
-
-## 🏗️ Architecture & Engineering Quality
-
-This project was built following **SOLID principles** and a **Service-Oriented Architecture** to ensure the system remains *understandable and correct as it evolves* — the core evaluation criterion.
-
-### ✅ Structure — Clear Boundaries & Logical Organization
-The codebase is split into strict layers: **Routes → Schemas → Services → Models**. Each layer has a single responsibility. No business logic leaks into routes; no data access logic leaks into services.
-
-### ✅ Simplicity — Readable, Predictable Code
-Patterns are consistent and boring by design. Every route follows the same flow: validate input → call service → return response. No clever abstractions that require decoding.
-
-### ✅ Correctness — Prevents Invalid States
-All data mutations pass through **Pydantic v2 schemas** before touching the database or service layer. Invalid states are structurally impossible — not just caught at runtime.
-
-### ✅ Interface Safety — Guards Against Misuse
-Pydantic schemas use `extra="forbid"` — the API **rejects** any request with unexpected fields. This is a strict contract, not a soft suggestion.
-
-### ✅ Change Resilience — New Features Without Widespread Impact
-The scraping/data-fetching logic lives entirely in a **standalone Service Layer**. Swapping the data source (e.g., from a reverse-engineered API to an official one) requires changing **one file**. Zero cascade.
-
-### ✅ Verification — Automated Tests Proving Correctness
-A full test suite covers URL validation, data extraction, schema enforcement, and error paths. Tests are the final guarantee that behavior stays correct after every change.
-
-```bash
-cd backend && python -m pytest
-# 11 passed in X.XXs ✅
+```text
+/PricePulse-Assessment
+├── /backend
+│   ├── /app
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── routes.py
+│   │   ├── schemas.py
+│   │   └── services.py
+│   ├── /tests
+│   │   └── test_api.py
+│   ├── config.py
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   └── run.py
+├── /frontend
+│   ├── /src
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .env.example
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── /ai_docs
+│   ├── coding_standards.md
+│   └── prompts.md
+├── AGENTS.md
+├── .gitignore
+└── README.md
 ```
 
-### ✅ Observability — Failures Are Visible & Diagnosable
-Every search — success or failure — is persisted to the SQLite database with structured JSON logs, including timestamps, query inputs, and error states. Failures never disappear silently.
+## Stack (Required)
 
----
+- Backend: Python + Flask
+- Frontend: React (Vite)
+- Database: SQLite (SQLAlchemy ORM)
+- Tools: Pydantic, Requests, BeautifulSoup, Pytest, TailwindCSS
 
-## 💡 Key Technical Decisions
+## Key Technical Decisions
 
-### 1. Reverse-Engineered API over HTML Scraping
-**Decision:** Instead of building fragile HTML scrapers (which get blocked and break on DOM changes), I reverse-engineered a commercial price-aggregator API.
+1. Flask Application Factory (`create_app`) for testability and clean setup.
+2. Service layer abstraction (`BaseScraper`, `PriceComparisonService`) to isolate scraping logic from routes.
+3. Strict request/response contracts with Pydantic (`extra="forbid"`) for interface safety.
+4. Structured JSON logging + `SearchHistory` persistence for observability.
+5. Explicit typed error mapping for correctness and predictable API behavior.
 
-**Tradeoff:** This trades long-term control for immediate reliability. The demo is 100% stable, but the upstream API is a dependency I don't own.
+## End-to-End Flow (How It Works)
 
-**Mitigation:** The Service Layer abstraction means if this API changes or goes down, the fix is localized to one service file — no routes, models, or frontend code changes.
+1. User pastes a product URL in frontend UI and clicks Compare.
+2. Frontend sends `POST /api/v1/compare` with `{ "url": "..." }`.
+3. Backend validates input with `PriceRequest` (URL format, supported domain, no extra fields).
+4. Service layer scrapes and normalizes product + alternatives data.
+5. Backend validates response with `ProductResponse` before returning JSON.
+6. Search is logged to DB in success and failure paths.
+7. Frontend renders image, current price, comparison graph, and seller cards.
 
-### 2. Flask Application Factory (`create_app`)
-**Decision:** Used the Application Factory pattern instead of a global `app` instance.
+## Features Included
 
-**Why:** Enables clean test isolation (each test gets a fresh app context), supports multiple environment configs, and prevents circular import issues as the app grows.
+- URL validation and marketplace detection (Amazon, Flipkart)
+- Main product image + thumbnail preview
+- Centered current price section
+- Price comparison graph
+- Seller list with sort (Lowest/Highest)
+- Best deal badge + savings insight + confidence indicators
+- History endpoint + history panel
+- Copy URL and shareable link support (`?url=...`)
+- Friendly error toasts for API/network/copy failures
 
-### 3. SQLite for the Assessment Scope
-**Decision:** SQLite over PostgreSQL/MySQL.
+## Setup and Run (Install to End)
 
-**Why:** Zero-dependency setup for reviewers. The SQLAlchemy ORM means swapping to PostgreSQL for production requires changing **one connection string**.
+## 1) Prerequisites
 
-### 4. Pydantic `extra="forbid"` Contracts
-**Decision:** All schemas reject unexpected fields at the boundary.
-
-**Why:** This enforces the API contract strictly. It prevents subtle bugs where extra data silently passes through and corrupts downstream logic.
-
----
-
-## ✨ Features
-
-- 🔍 **Smart URL Detection** — Automatically identifies Amazon or Flipkart product links
-- ⚡ **Live Price Comparison** — Fetches real-time prices, images, and ratings
-- 📈 **Price History Graph** — Visualizes price trends over time
-- 🔃 **Advanced Sorting** — Filter alternative sellers by lowest or highest price
-- 📋 **Search History** — Persistently tracks previous searches per session
-- 🚨 **Graceful Error Handling** — Toast notifications for timeouts, invalid links, and API failures
-
----
-
-## 🤖 AI Usage & Guidance
-
-This project follows an **AI-First engineering model**. AI was used as a **force multiplier**, not a code dispenser.
-
-### How AI Was Used
-- **Scaffolding:** Initial route and model boilerplate was AI-generated
-- **Refactoring:** AI was prompted to refactor a monolithic prototype into the Service-Layer architecture
-- **Test Generation:** AI generated initial test cases, which were then critically reviewed and extended
-
-### How AI Was Constrained (see `/ai_docs`)
-The `/ai_docs` folder contains the exact instruction files used to guide AI agents:
-
-- **No route is shipped without an associated Pydantic schema** — AI was instructed to treat unvalidated routes as broken
-- **No feature is shipped without a test** — AI was blocked from marking tasks complete without a corresponding test case
-- **Monolithic code is rejected** — AI was instructed to separate concerns into the defined layer structure
-
-### Critical Review Process
-The AI's first output was a single-file Flask app. I **rejected it**, identified the architectural violations, and re-prompted with explicit constraints. The final structure is the result of that review loop — not the first output.
-
----
-
-## 🚀 Setup & Run
-
-### Prerequisites
 - Python 3.10+
 - Node.js 18+
+- npm
 
-### 1. Backend
+## 2) Backend Setup
+
 ```bash
 cd backend
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 python run.py
 ```
-> Runs at: `http://127.0.0.1:5000`
 
-### 2. Frontend
+Backend base URL:
+
+- `http://127.0.0.1:5000/api/v1`
+
+## 3) Frontend Setup
+
+Open a new terminal:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-> Runs at: `http://127.0.0.1:5173`
 
-### 3. Run Tests
+Frontend URL:
+
+- `http://127.0.0.1:5173`
+
+Notes:
+
+- Vite proxy forwards `/api/*` to backend (`127.0.0.1:5000`).
+- Optional direct backend mode can use `VITE_API_BASE_URL` from `frontend/.env.example`.
+
+## 4) Run Tests
+
 ```bash
 cd backend
-python -m pytest
-```
-> Expected: **11 passed** ✅
-
----
-
-## 📁 Repository Structure
-
-```text
-better-price/
-├── backend/
-│   ├── app/
-│   │   ├── models/         # SQLAlchemy DB Models
-│   │   ├── schemas/        # Pydantic v2 Validation Schemas
-│   │   ├── services/       # Business Logic & Data Fetching
-│   │   └── routes/         # Flask Route Handlers
-│   ├── tests/              # Pytest Suite (11 tests)
-│   └── run.py              # Application Entry Point
-├── frontend/               # React + Vite + TailwindCSS
-├── ai_docs/                # AI Coaching Files & Coding Standards
-└── README.md
+python -m pytest -q
 ```
 
----
+Current status: **11 tests passing**.
 
-## ⚠️ Risks, Weaknesses & Extensions
+## 5) Production Build Check (Frontend)
 
-### Known Risks
-| Risk | Likelihood | Mitigation |
+```bash
+cd frontend
+npm run build
+```
+
+## API Reference
+
+## Health
+
+- `GET /api/v1/health`
+- Response: `{ "status": "ok" }`
+
+## Compare
+
+- `POST /api/v1/compare`
+- Request body:
+
+```json
+{
+  "url": "https://www.amazon.in/dp/B0ABCDE123"
+}
+```
+
+- Success response (example):
+
+```json
+{
+  "title": "Sample Product",
+  "price": 1499.0,
+  "image_url": "https://...",
+  "thumbnail_images": [],
+  "source": "buyhatke",
+  "marketplace": "amazon",
+  "tracker_url": "https://...",
+  "alternatives_count": 3,
+  "alternatives": [],
+  "status": "Success",
+  "error": null
+}
+```
+
+## History
+
+- `GET /api/v1/history`
+- Returns latest search entries (success and failure).
+
+## Error Handling
+
+- 400: Validation failures / unsupported input
+- 404: Upstream not found
+- 503: Timeout or bot-block
+- 502: Other scraper errors
+
+## Architecture Quality (What Reviewers Evaluate)
+
+- Structure: clear boundaries (`routes` → `services` → `models`/`schemas`)
+- Simplicity: readable, explicit code paths
+- Correctness: invalid states rejected early
+- Interface Safety: strict schema validation on request and response
+- Change Resilience: scraper adapter pattern; route contract remains stable
+- Verification: automated pytest suite
+- Observability: structured logs + persisted search history
+- AI Guidance: documented constraints and prompting artifacts
+- AI Usage: generated code reviewed and corrected where needed
+
+## AI Guidance Files
+
+- `AGENTS.md`
+- `ai_docs/coding_standards.md`
+- `ai_docs/prompts.md`
+
+## Risks and Mitigations
+
+1. Marketplace HTML/API changes
+   - Mitigation: isolate scraping logic in service layer.
+2. Upstream timeout or bot detection
+   - Mitigation: explicit error mapping + persisted failure records.
+3. Bad user input
+   - Mitigation: strict Pydantic validation with `extra="forbid"`.
+
+## Extension Plan
+
+- Add new marketplace adapters as new `BaseScraper` classes
+- Add caching for repeated requests
+- Add async queue + retries for scrape jobs
+- Add auth/rate limiting for production
+- Add tracing/metrics for deeper monitoring
+
+## Submission Checklist Mapping
+
+| Requirement | Status | Evidence |
 |---|---|---|
-| Upstream API changes break data extraction | Medium | Service Layer isolates the change to one file |
-| SQLite not suitable for concurrent production load | Low (assessment scope) | ORM swap to PostgreSQL = one connection string change |
-| No rate limiting on endpoints | Medium | Add `Flask-Limiter` as a one-file addition |
+| Flask backend | ✅ | `backend/app/` |
+| React frontend | ✅ | `frontend/src/App.jsx` |
+| Relational DB | ✅ | SQLite + SQLAlchemy (`SearchHistory`) |
+| Working repository | ✅ | App runs, tests pass, build passes |
+| Key technical decisions | ✅ | This README section |
+| Walkthrough content | ✅ | Flow, risks, extension plan sections |
+| AI guidance files | ✅ | `AGENTS.md`, `ai_docs/*` |
+| Verification | ✅ | `backend/tests/test_api.py` (11 passing) |
+| Observability | ✅ | structured logs + DB history |
 
-### Honest Weaknesses
-- The reverse-engineered API is an external dependency I don't control — a terms-of-service risk in production
-- No user authentication in this version — search history is global, not per-user
-- Price history is limited by how often users search, not by a background polling job
+## Quick Commands
 
-### Future Extensions
-1. **User Authentication** — JWT-based auth to scope history per user
-2. **Price-Drop Alerts** — Background Celery task + email notifications via SendGrid
-3. **International Marketplaces** — Plugin architecture in the Service Layer to add new scrapers
-4. **Background Polling** — Scheduled price refresh for tracked products without user-triggered searches
+```bash
+# Backend
+cd backend
+python -m pip install -r requirements.txt
+python run.py
 
---- 
+# Backend tests
+python -m pytest -q
 
-screenshots:
+# Frontend
+cd ../frontend
+npm install
+npm run dev
 
-<img width="1888" height="907" alt="image" src="https://github.com/user-attachments/assets/fa909d06-08c9-437f-b2a8-be36d16e1e44" />
-<img width="1754" height="900" alt="image" src="https://github.com/user-attachments/assets/2519de8c-78e9-46c3-b959-d547244c9f08" />
-<img width="1853" height="909" alt="image" src="https://github.com/user-attachments/assets/6c583a0e-e805-496f-8bf0-905794f74212" />
-
-
-
+# Frontend production build
+npm run build
+```
