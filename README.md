@@ -178,6 +178,13 @@ better-price/
 3. **International Marketplaces** — Plugin architecture in the Service Layer to add new scrapers
 4. **Background Polling** — Scheduled price refresh for tracked products without user-triggered searches
 
----
+--- 
 
-*Built specifically for the Better Software Associate Software Engineer assessment. No confidential, proprietary, or employer-owned code was used.*
+screenshots:
+
+<img width="1888" height="907" alt="image" src="https://github.com/user-attachments/assets/fa909d06-08c9-437f-b2a8-be36d16e1e44" />
+<img width="1754" height="900" alt="image" src="https://github.com/user-attachments/assets/2519de8c-78e9-46c3-b959-d547244c9f08" />
+<img width="1853" height="909" alt="image" src="https://github.com/user-attachments/assets/6c583a0e-e805-496f-8bf0-905794f74212" />
+
+
+
